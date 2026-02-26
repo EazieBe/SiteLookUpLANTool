@@ -1,0 +1,7 @@
+{
+  "name": "ics-site-lookup",
+  "version": "2026.1",
+  "type": "module",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.19.2" }
+}

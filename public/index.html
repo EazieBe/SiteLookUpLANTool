@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICS Site# Lookup • 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', system_ui, sans-serif; }
+        .glass { background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); }
+        .modern-input { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .modern-input:focus { box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.4); transform: scale(1.02); }
+        td { transition: all 0.15s ease; cursor: pointer; }
+        tr:hover td { background-color: rgba(255,255,255,0.07) !important; transform: translateX(4px); }
+        .ip-row { background: rgba(16, 185, 129, 0.18) !important; }
+        .address-row { background: rgba(245, 158, 11, 0.12) !important; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <div class="bg-zinc-900 border-b border-white/10 py-4 px-8 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-5">
+            <img src="/ICS-Logo.png" alt="ICS Logo" class="h-11 w-auto drop-shadow-xl">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tighter">Site# Lookup</h1>
+                <p class="text-zinc-400 text-xs -mt-1">ICS Enterprise • 2026 • LAN</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div id="dataStatusHeader" class="hidden items-center gap-3 text-sm">
+                <span class="bg-emerald-900 text-emerald-400 px-4 py-1.5 rounded-2xl font-medium flex items-center gap-2">
+                    <i class="fas fa-check-circle"></i> <span id="sitesLoaded">0</span> sites
+                </span>
+            </div>
+            <button onclick="toggleSiteModal()" class="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm font-medium transition-all">
+                <i class="fas fa-upload"></i> Update Sites
+            </button>
+            <button onclick="toggleMatrixModal()" class="flex items-center gap-2 px-5 py-2.5 bg-violet-800 hover:bg-violet-700 rounded-2xl text-sm font-medium transition-all">
+                <i class="fas fa-table"></i> Update Port Matrices
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Scrollable Content -->
+    <div class="flex-1 overflow-y-auto max-w-6xl mx-auto w-full p-6">
+        <!-- Search -->
+        <div class="mb-6">
+            <div class="flex gap-3">
+                <div class="flex-1 relative">
+                    <input id="siteInput" type="text" maxlength="10" onkeypress="if(event.key === 'Enter') searchSite()" 
+                           class="modern-input w-full bg-zinc-900 border border-white/10 text-3xl font-mono tracking-widest text-center py-5 rounded-3xl outline-none placeholder-zinc-500" 
+                           placeholder="1234">
+                    <div class="absolute right-6 top-1/2 -translate-y-1/2 text-xs uppercase tracking-widest text-zinc-500 font-medium">SITE #</div>
+                </div>
+                <button onclick="searchSite()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 px-12 rounded-3xl font-bold text-xl transition-all active:scale-95">GO</button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsPanel" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="resultSite" class="text-3xl font-bold tracking-tighter"></h2>
+                <button onclick="newSearch()" class="flex items-center gap-2 px-5 py-2 text-sm text-zinc-400 hover:text-white hover:bg-zinc-900 rounded-2xl transition-all">
+                    <i class="fas fa-redo"></i> NEW SEARCH
+                </button>
+            </div>
+
+            <button id="copyIpBtn" onclick="copyIpManual()" class="hidden w-full mb-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 py-4 rounded-3xl font-bold text-lg flex items-center justify-center gap-3 shadow-xl transition-all">
+                <i class="fas fa-copy"></i> COPY IP ADDRESS
+            </button>
+            <button id="fortivoiceBtn" onclick="copyFortivoiceUrl()" class="hidden w-full mb-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 py-4 rounded-3xl font-bold text-lg flex items-center justify-center gap-3 shadow-xl transition-all">
+                <i class="fas fa-link"></i> Fortivoice IP Format[](https://IP/admin)
+            </button>
+
+            <button id="matrixBtn" onclick="toggleMatrixView()" class="hidden w-full mb-6 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 py-4 rounded-3xl font-bold text-lg flex items-center justify-center gap-3 shadow-xl transition-all">
+                <i class="fas fa-table"></i> <span id="matrixBtnText">View Port Matrix</span>
+            </button>
+
+            <div id="debugInfo" class="text-xs font-mono text-zinc-400 mb-4 p-3 bg-zinc-900 rounded-2xl border border-zinc-700"></div>
+
+            <!-- Site Table -->
+            <div class="glass overflow-auto rounded-3xl border border-white/10 mb-8">
+                <table class="w-full min-w-full">
+                    <thead class="sticky top-0 bg-zinc-900 border-b border-white/10">
+                        <tr>
+                            <th class="text-left py-4 px-6 font-medium text-zinc-400 text-xs tracking-widest w-2/5">FIELD</th>
+                            <th class="text-left py-4 px-6 font-medium text-zinc-400 text-xs tracking-widest">VALUE (click to copy)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody" class="divide-y divide-white/10"></tbody>
+                </table>
+            </div>
+
+            <!-- Matrix -->
+            <div id="matrixSection" class="hidden">
+                <h3 id="matrixTitle" class="text-xl font-semibold mb-4 flex items-center gap-3 text-amber-400">
+                    <i class="fas fa-table"></i> Port Matrix
+                </h3>
+                <div class="glass overflow-auto rounded-3xl border border-white/10" style="max-height: 600px;">
+                    <table class="w-full min-w-full">
+                        <thead class="sticky top-0 bg-zinc-900 border-b border-white/10">
+                            <tr id="matrixHeader"></tr>
+                        </thead>
+                        <tbody id="matrixBody" class="divide-y divide-white/10"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-center text-zinc-500">
+            <i class="fas fa-search text-7xl mb-6 opacity-40"></i>
+            <p class="text-2xl font-light">Type a Site# above</p>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="siteModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="glass rounded-3xl p-8 w-full max-w-2xl">
+            <h2 class="text-2xl font-bold mb-6">Update Main Sites Spreadsheet</h2>
+            <textarea id="siteInputModal" rows="12" class="w-full bg-zinc-900 border border-white/10 rounded-2xl p-6 text-sm font-mono" placeholder="Paste your main site spreadsheet here..."></textarea>
+            <div class="flex gap-3 mt-6">
+                <button onclick="uploadSites()" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 py-4 rounded-2xl font-semibold">UPLOAD SITES</button>
+                <button onclick="toggleSiteModal()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 py-4 rounded-2xl font-semibold">Cancel</button>
+            </div>
+            <div id="siteStatus" class="mt-4 text-sm"></div>
+        </div>
+    </div>
+
+    <div id="matrixModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="glass rounded-3xl p-8 w-full max-w-2xl">
+            <h2 class="text-2xl font-bold mb-6">Add / Update Port Matrix</h2>
+            <input id="brandName" type="text" class="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 mb-4 text-lg" placeholder="Brand Name (exact as in main sheet)">
+            <textarea id="matrixInput" rows="14" class="w-full bg-zinc-900 border border-white/10 rounded-2xl p-6 text-sm font-mono" placeholder="Paste the full port matrix table here..."></textarea>
+            <div class="flex gap-3 mt-6">
+                <button onclick="uploadMatrix()" class="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 py-4 rounded-2xl font-semibold">UPLOAD MATRIX</button>
+                <button onclick="toggleMatrixModal()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 py-4 rounded-2xl font-semibold">Cancel</button>
+            </div>
+            <div id="matrixStatus" class="mt-4 text-sm"></div>
+        </div>
+    </div>
+
+    <div class="text-center text-xs text-zinc-600 pb-6">ICS Internal Tool • LAN Only</div>
+
+    <script>
+        let siteMap = new Map();
+        let portMatrices = {};
+        let currentIpAddress = '';
+        let allSites = [];
+        let currentBrandRaw = '';
+
+        function normalizeBrand(b) {
+            return (b || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
+        }
+
+        async function loadAllData() {
+            try {
+                const res = await fetch('/api/data');
+                const data = await res.json();
+                allSites = data.sites || [];
+                portMatrices = data.matrices || {};
+                buildSiteMap(allSites);
+                document.getElementById('dataStatusHeader').classList.remove('hidden');
+                document.getElementById('sitesLoaded').textContent = allSites.length;
+            } catch(e) {}
+        }
+
+        function buildSiteMap(data) {
+            siteMap.clear();
+            data.forEach(row => {
+                let siteRaw = row['Site#'] || row['Site'] || '';
+                const siteStr = String(siteRaw).trim();
+                if (siteStr) {
+                    siteMap.set(siteStr, row);
+                    const numOnly = siteStr.replace(/\D/g, '');
+                    if (numOnly) {
+                        siteMap.set(numOnly, row);
+                        siteMap.set(numOnly.padStart(4, '0'), row);
+                    }
+                }
+            });
+        }
+
+        function detectIpAddress(row) {
+            let candidate = ''; let highest = -1;
+            Object.entries(row).forEach(([key, value]) => {
+                if (!value) return;
+                const lk = key.toLowerCase().trim();
+                let p = 0;
+                if (lk.includes('ip:')) p = 100;
+                else if (lk.includes('ip address')) p = 95;
+                else if (lk.match(/^ip(\s|$|:)/i)) p = 90;
+                else if (lk.includes('ipv4')) p = 85;
+                else if (lk.includes('ip') && !lk.includes('zip') && !lk.includes('ship')) p = 60;
+                if (/\b(?:\d{1,3}\.){3}\d{1,3}\b/.test(value)) p += 40;
+                if (p > highest) { highest = p; candidate = String(value).trim(); }
+            });
+            return candidate;
+        }
+
+        function getBrand(row) {
+            return (row['Brand'] || row['brand'] || row['Brand Name'] || '').toString().trim();
+        }
+
+        function findMatrixForBrand(brandRaw) {
+            if (!brandRaw) return null;
+            const norm = normalizeBrand(brandRaw);
+            if (portMatrices[norm]) return {display: brandRaw, rows: portMatrices[norm]};
+            if (portMatrices[brandRaw]) return {display: brandRaw, rows: portMatrices[brandRaw]};
+            for (let key in portMatrices) {
+                if (normalizeBrand(key) === norm) return {display: key, rows: portMatrices[key]};
+            }
+            return null;
+        }
+
+        function searchSite() {
+            let input = document.getElementById('siteInput').value.trim();
+            if (!input) return;
+            if (siteMap.size === 0) return alert("Data not loaded yet");
+            let row = siteMap.get(input) || siteMap.get(input.padStart(4,'0'));
+            if (!row) {
+                document.getElementById('resultsPanel').classList.remove('hidden');
+                document.getElementById('emptyState').classList.add('hidden');
+                document.getElementById('resultSite').innerHTML = `<span class="text-red-400">Not found</span>`;
+                document.getElementById('resultsBody').innerHTML = `<tr><td colspan="2" class="py-16 text-center text-zinc-500">Site# ${input} not found</td></tr>`;
+                return;
+            }
+            displayResults(row, input);
+        }
+
+        function displayResults(row, searched) {
+            currentIpAddress = detectIpAddress(row);
+            currentBrandRaw = getBrand(row);
+
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('resultsPanel').classList.remove('hidden');
+            document.getElementById('resultSite').innerHTML = `Site# <span class="font-mono text-blue-400">${searched}</span>`;
+
+            let debugHTML = `Detected brand: <span class="font-bold">${currentBrandRaw || '(none)'}</span><br>`;
+            debugHTML += `Loaded matrices: ${Object.keys(portMatrices).join(', ') || '(none)'}`;
+            document.getElementById('debugInfo').innerHTML = debugHTML;
+
+            document.getElementById('copyIpBtn').classList.toggle('hidden', !currentIpAddress);
+            document.getElementById('fortivoiceBtn').classList.toggle('hidden', !currentIpAddress);
+
+            const matrixMatch = findMatrixForBrand(currentBrandRaw);
+            const matrixBtn = document.getElementById('matrixBtn');
+            matrixBtn.classList.toggle('hidden', !matrixMatch);
+            if (matrixMatch) {
+                document.getElementById('matrixBtnText').textContent = `View Port Matrix – ${matrixMatch.display}`;
+            }
+
+            document.getElementById('matrixSection').classList.add('hidden');
+
+            // Site table
+            let fullAddress = '';
+            const parts = [];
+            if (row['Service Address']) parts.push(row['Service Address'].trim());
+            if (row['City']) parts.push(row['City'].trim());
+            if (row['State']) parts.push(row['State'].trim());
+            if (row['Zip']) parts.push(row['Zip'].trim());
+            if (parts.length > 0) fullAddress = parts.join(', ');
+
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+
+            if (fullAddress) {
+                const tr = document.createElement('tr');
+                tr.className = 'address-row';
+                tr.innerHTML = `<td class="py-4 px-6 font-medium text-amber-400">Full Address</td><td onclick="copyValue(this)" class="py-4 px-6 font-mono">${fullAddress}</td>`;
+                tbody.appendChild(tr);
+            }
+
+            Object.entries(row).forEach(([key, value]) => {
+                if (!value) return;
+                if (['Service Address','City','State','Zip'].includes(key)) return;
+                const isIP = value === currentIpAddress;
+                const tr = document.createElement('tr');
+                tr.className = isIP ? 'ip-row' : '';
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-medium text-zinc-400">${key}</td>
+                    <td onclick="copyValue(this)" class="py-4 px-6 font-mono ${isIP ? 'text-emerald-400 font-semibold' : ''}">
+                        ${value}
+                        ${isIP ? ' <span class="text-xs bg-emerald-900 px-2 py-px rounded">IP</span>' : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if (currentIpAddress) copyToClipboard(currentIpAddress);
+
+            setTimeout(() => {
+                const input = document.getElementById('siteInput');
+                input.focus(); input.select();
+            }, 30);
+        }
+
+        function toggleMatrixView() {
+            const section = document.getElementById('matrixSection');
+            const match = findMatrixForBrand(currentBrandRaw);
+
+            if (!match) {
+                alert("No matrix found for this brand");
+                return;
+            }
+
+            if (section.classList.contains('hidden')) {
+                renderMatrix(match.display, match.rows);
+                section.classList.remove('hidden');
+                document.getElementById('matrixBtnText').textContent = `Hide Port Matrix – ${match.display}`;
+                section.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                section.classList.add('hidden');
+                document.getElementById('matrixBtnText').textContent = `View Port Matrix – ${match.display}`;
+            }
+        }
+
+        function renderMatrix(displayName, rows) {
+            document.getElementById('matrixTitle').innerHTML = `<i class="fas fa-table"></i> Port Matrix – ${displayName}`;
+
+            const headerRow = document.getElementById('matrixHeader');
+            headerRow.innerHTML = '';
+            const firstRow = rows[0] || {};
+            Object.keys(firstRow).forEach(key => {
+                const th = document.createElement('th');
+                th.className = 'py-4 px-6 font-medium text-amber-300 text-xs tracking-widest text-left';
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+
+            const tbody = document.getElementById('matrixBody');
+            tbody.innerHTML = '';
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                Object.values(row).forEach(val => {
+                    const td = document.createElement('td');
+                    td.className = 'py-4 px-6 font-mono';
+                    td.textContent = val || '';
+                    td.onclick = () => copyValue(td);
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => showCopyNotification(text));
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch(e) {}
+                document.body.removeChild(ta);
+                showCopyNotification(text);
+            }
+        }
+
+        function copyIpManual() { if (currentIpAddress) copyToClipboard(currentIpAddress); }
+        function copyFortivoiceUrl() { if (currentIpAddress) copyToClipboard(`https://${currentIpAddress}/admin`); }
+        function copyValue(el) {
+            let text = el.textContent.trim();
+            if (text) copyToClipboard(text);
+        }
+
+        function showCopyNotification(text) {
+            const n = document.createElement('div');
+            n.className = 'fixed bottom-8 right-8 bg-emerald-900 border border-emerald-400 text-emerald-300 px-7 py-4 rounded-3xl flex items-center gap-4 shadow-2xl z-50';
+            n.innerHTML = `<i class="fas fa-check-circle text-3xl"></i><div><div class="font-semibold">Copied!</div><div class="font-mono text-sm">${text}</div></div>`;
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 2600);
+        }
+
+        function newSearch() {
+            document.getElementById('resultsPanel').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('siteInput').value = '';
+            document.getElementById('siteInput').focus();
+        }
+
+        function toggleSiteModal() { document.getElementById('siteModal').classList.toggle('hidden'); }
+        function toggleMatrixModal() { document.getElementById('matrixModal').classList.toggle('hidden'); }
+
+        async function uploadSites() {
+            const text = document.getElementById('siteInputModal').value;
+            if (!text.trim()) return alert('Paste data first');
+            const status = document.getElementById('siteStatus');
+            status.innerHTML = '<span class="text-blue-400">Uploading...</span>';
+            try {
+                const res = await fetch('/api/data', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ rawText: text }) });
+                const data = await res.json();
+                if (data.success) {
+                    status.innerHTML = `<span class="text-emerald-400">✅ Sites updated!</span>`;
+                    setTimeout(() => { toggleSiteModal(); window.location.reload(); }, 1200);
+                }
+            } catch(e) { status.innerHTML = '<span class="text-red-400">Upload failed</span>'; }
+        }
+
+        async function uploadMatrix() {
+            const brand = document.getElementById('brandName').value.trim();
+            const text = document.getElementById('matrixInput').value;
+            if (!brand || !text.trim()) return alert('Brand name and matrix required');
+            const status = document.getElementById('matrixStatus');
+            status.innerHTML = '<span class="text-blue-400">Uploading matrix...</span>';
+            try {
+                const res = await fetch('/api/matrix', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ brand, rawText: text }) });
+                const data = await res.json();
+                if (data.success) {
+                    status.innerHTML = `<span class="text-emerald-400">✅ Matrix for ${brand} saved!</span>`;
+                    setTimeout(() => { toggleMatrixModal(); window.location.reload(); }, 1200);
+                }
+            } catch(e) { status.innerHTML = '<span class="text-red-400">Upload failed</span>'; }
+        }
+
+        window.onload = () => {
+            loadAllData();
+            document.getElementById('siteInput').focus();
+        };
+    </script>
+</body>
+</html>
