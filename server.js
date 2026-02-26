@@ -31,6 +31,73 @@ loadData();
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public/index.html')));
 app.get('/api/data', (req, res) => res.json({ sites: currentData, matrices: portMatrices }));
 
+// Lightweight endpoints so client doesn't need to load all sites
+const DEFAULT_FORTIVOICE_TEMPLATE = 'https://{ip}/admin';
+app.get('/api/stats', (req, res) => res.json({
+  siteCount: currentData.length,
+  matrixCount: Object.keys(portMatrices).length,
+  fortivoiceUrlTemplate: process.env.FORTIVOICE_URL_TEMPLATE || DEFAULT_FORTIVOICE_TEMPLATE
+}));
+app.get('/api/matrices', (req, res) => res.json({ matrices: portMatrices }));
+
+// Admin: verify password (no login for normal users; only when opening admin menu)
+// Set ADMIN_PASSWORD in env to require a password; if unset, empty password unlocks (for dev).
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? '';
+app.post('/api/admin/verify', (req, res) => {
+  const { password } = req.body || {};
+  const match = String(password || '') === ADMIN_PASSWORD;
+  res.json({ ok: !!match });
+});
+
+// Search with mode: site (exact Site# only), address, city, brand, ip (substring in that field).
+const SEARCH_LIMIT = 50;
+const SEARCH_MODES = ['site', 'address', 'city', 'brand', 'ip'];
+app.get('/api/search', (req, res) => {
+  try {
+    const q = (req.query.q || '').toString().trim();
+    if (!q) return res.json([]);
+    const mode = SEARCH_MODES.includes(req.query.mode) ? req.query.mode : 'site';
+    const data = Array.isArray(currentData) ? currentData : [];
+    const lower = q.toLowerCase();
+    const qNorm = q.replace(/\D/g, '');
+    const qPadded = qNorm ? qNorm.padStart(4, '0') : '';
+    const results = [];
+    for (const row of data) {
+      if (typeof row !== 'object' || row === null) continue;
+      let match = false;
+      if (mode === 'site') {
+        const siteNum = String(row['Site#'] || row['Site'] || '').trim();
+        const siteNorm = siteNum.replace(/\D/g, '');
+        const sitePadded = siteNorm ? siteNorm.padStart(4, '0') : '';
+        const queryNorm = q.replace(/\D/g, '');
+        const queryPadded = queryNorm ? queryNorm.padStart(4, '0') : '';
+        match = queryNorm.length > 0 && (siteNorm === queryNorm || sitePadded === queryPadded);
+      } else if (mode === 'address') {
+        const parts = [row['Service Address'], row['City'], row['State']].filter(Boolean).join(' ').toLowerCase();
+        match = parts.includes(lower);
+      } else if (mode === 'city') {
+        const city = String(row['City'] || '').toLowerCase();
+        match = city.includes(lower);
+      } else if (mode === 'brand') {
+        const brand = String(row['Brand'] || row['brand'] || '').toLowerCase();
+        match = brand.includes(lower);
+      } else if (mode === 'ip') {
+        const ipVal = String(row['IP: Address'] || row['IP Address'] || row['IP'] || '').trim();
+        match = ipVal.includes(q) || ipVal === q;
+      }
+      if (match) {
+        results.push(row);
+        if (mode === 'site' && results.length >= 1) break;
+        if (results.length >= SEARCH_LIMIT) break;
+      }
+    }
+    res.json(results);
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json([]);
+  }
+});
+
 // Main sites upload
 app.post('/api/data', (req, res) => {
   try {

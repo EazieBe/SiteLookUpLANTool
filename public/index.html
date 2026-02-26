@@ -16,9 +16,40 @@
         tr:hover td { background-color: rgba(255,255,255,0.07) !important; transform: translateX(4px); }
         .ip-row { background: rgba(16, 185, 129, 0.18) !important; }
         .address-row { background: rgba(245, 158, 11, 0.12) !important; font-weight: 600; }
+        #matrixSection.matrix-fullscreen { position: fixed; inset: 0; z-index: 40; background: rgb(10 10 10); overflow: auto; padding: 0; display: flex; flex-direction: column; }
+        #matrixSection.matrix-fullscreen .matrix-fullscreen-bar { display: flex !important; }
+        #matrixSection.matrix-fullscreen .matrix-table-wrap { max-height: none; flex: 1; min-height: 0; }
+        #matrixSection .matrix-fullscreen-bar { display: none; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.5rem; background: rgb(24 24 27); border-bottom: 2px solid rgba(251,191,36,0.5); }
+        #matrixSection .matrix-fullscreen-bar .matrix-fs-title { font-size: 1.25rem; font-weight: 600; color: rgb(251 191 36); }
+        html.theme-light body { background: #f4f4f5; color: #18181b; }
+        html.theme-light .bg-zinc-950 { background: #f4f4f5 !important; }
+        html.theme-light .bg-zinc-900 { background: #e4e4e7 !important; }
+        html.theme-light .text-white { color: #18181b !important; }
+        html.theme-light .text-zinc-400 { color: #52525b !important; }
+        html.theme-light .text-zinc-500 { color: #71717a !important; }
+        html.theme-light .text-zinc-600 { color: #52525b !important; }
+        html.theme-light .glass { background: rgba(0,0,0,0.04); }
+        html.theme-light .border-white\/10 { border-color: rgba(0,0,0,0.1) !important; }
+        html.theme-light .divide-white\/10 > * { border-color: rgba(0,0,0,0.1) !important; }
+        html.theme-light input, html.theme-light textarea { background: #e4e4e7 !important; color: #18181b !important; }
+        html.theme-light .matrix-fullscreen-bar { background: #d4d4d8 !important; border-color: rgba(245,158,11,0.6) !important; }
+        html.theme-light .matrix-fullscreen-bar .matrix-fs-title { color: #b45309 !important; }
+        html.theme-light #matrixSection.matrix-fullscreen { background: #f4f4f5 !important; }
+        html.theme-light .matrix-fullscreen-bar button { color: #fff !important; }
+        html.theme-light .bg-zinc-800 { background: #d4d4d8 !important; }
+        html.theme-light .bg-zinc-700 { background: #a1a1aa !important; }
+        html.theme-light .hover\:bg-zinc-700:hover { background: #a1a1aa !important; }
+        html.theme-light .hover\:bg-zinc-600:hover { background: #71717a !important; }
+        html.theme-light .text-amber-400 { color: #b45309 !important; }
+        html.theme-light .text-emerald-400 { color: #059669 !important; }
+        body { font-size: 1rem; }
+        .matrix-table-wrap table { font-size: 0.9375rem; }
+        .matrix-table-wrap th, .matrix-table-wrap td { padding: 0.625rem 0.875rem; }
+        #matrixSection.matrix-fullscreen .matrix-table-wrap { padding: 0 1rem 1rem; }
+        .admin-dropdown { position: absolute; top: 100%; right: 0; margin-top: 0.25rem; min-width: 12rem; z-index: 50; }
     </style>
 </head>
-<body class="bg-zinc-950 text-white min-h-screen flex flex-col">
+<body class="bg-zinc-950 text-white min-h-screen flex flex-col text-base">
 
     <!-- Header -->
     <div class="bg-zinc-900 border-b border-white/10 py-4 px-8 flex items-center justify-between sticky top-0 z-50">
@@ -35,11 +66,21 @@
                     <i class="fas fa-check-circle"></i> <span id="sitesLoaded">0</span> sites
                 </span>
             </div>
-            <button onclick="toggleSiteModal()" class="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm font-medium transition-all">
-                <i class="fas fa-upload"></i> Update Sites
+            <div class="relative">
+                <button onclick="toggleAdminMenu()" class="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm font-medium transition-all" title="Admin: update sites and matrices">
+                    <i class="fas fa-lock"></i> Admin
+                </button>
+                <div id="adminDropdown" class="hidden admin-dropdown glass rounded-2xl border border-white/10 py-2 shadow-xl">
+                    <button onclick="closeAdminMenu(); toggleSiteModal();" class="w-full text-left px-5 py-3 hover:bg-white/10 flex items-center gap-2 text-sm"><i class="fas fa-upload"></i> Update Sites</button>
+                    <button onclick="closeAdminMenu(); toggleMatrixModal();" class="w-full text-left px-5 py-3 hover:bg-white/10 flex items-center gap-2 text-sm"><i class="fas fa-table"></i> Update Port Matrices</button>
+                    <button onclick="closeAdminMenu(); openUniversalUploadModal();" class="w-full text-left px-5 py-3 hover:bg-white/10 flex items-center gap-2 text-sm"><i class="fas fa-upload"></i> Upload Dell Universal</button>
+                </div>
+            </div>
+            <button onclick="showUniversalMatrix()" class="flex items-center gap-2 px-5 py-2.5 bg-amber-800 hover:bg-amber-700 rounded-2xl text-sm font-medium transition-all" title="View matrix that applies to any site">
+                <i class="fas fa-globe"></i> Dell Universal
             </button>
-            <button onclick="toggleMatrixModal()" class="flex items-center gap-2 px-5 py-2.5 bg-violet-800 hover:bg-violet-700 rounded-2xl text-sm font-medium transition-all">
-                <i class="fas fa-table"></i> Update Port Matrices
+            <button onclick="toggleSettingsModal()" class="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm font-medium transition-all" title="Settings">
+                <i class="fas fa-cog"></i> Settings
             </button>
         </div>
     </div>
@@ -48,12 +89,22 @@
     <div class="flex-1 overflow-y-auto max-w-6xl mx-auto w-full p-6">
         <!-- Search -->
         <div class="mb-6">
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+                <span class="text-zinc-500 text-sm font-medium">Search by:</span>
+                <div class="flex flex-wrap gap-2">
+                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="searchMode" value="site" checked class="rounded-full border-zinc-600 bg-zinc-800 text-blue-500"> <span>Site#</span></label>
+                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="searchMode" value="address" class="rounded-full border-zinc-600 bg-zinc-800 text-blue-500"> <span>Address</span></label>
+                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="searchMode" value="city" class="rounded-full border-zinc-600 bg-zinc-800 text-blue-500"> <span>City</span></label>
+                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="searchMode" value="brand" class="rounded-full border-zinc-600 bg-zinc-800 text-blue-500"> <span>Brand</span></label>
+                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="searchMode" value="ip" class="rounded-full border-zinc-600 bg-zinc-800 text-blue-500"> <span>IP</span></label>
+                </div>
+            </div>
             <div class="flex gap-3">
                 <div class="flex-1 relative">
-                    <input id="siteInput" type="text" maxlength="10" onkeypress="if(event.key === 'Enter') searchSite()" 
-                           class="modern-input w-full bg-zinc-900 border border-white/10 text-3xl font-mono tracking-widest text-center py-5 rounded-3xl outline-none placeholder-zinc-500" 
-                           placeholder="1234">
-                    <div class="absolute right-6 top-1/2 -translate-y-1/2 text-xs uppercase tracking-widest text-zinc-500 font-medium">SITE #</div>
+                    <input id="siteInput" type="text" onkeypress="if(event.key === 'Enter') searchSite()" 
+                           class="modern-input w-full bg-zinc-900 border border-white/10 text-xl sm:text-2xl py-5 pl-6 pr-28 rounded-3xl outline-none placeholder-zinc-500" 
+                           placeholder="e.g. 4412">
+                    <div class="absolute right-6 top-1/2 -translate-y-1/2 text-xs uppercase tracking-widest text-zinc-500 font-medium">SEARCH</div>
                 </div>
                 <button onclick="searchSite()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 px-12 rounded-3xl font-bold text-xl transition-all active:scale-95">GO</button>
             </div>
@@ -68,18 +119,32 @@
                 </button>
             </div>
 
+            <!-- Multiple matches: pick a site -->
+            <div id="multiResultList" class="hidden mb-6">
+                <p class="text-zinc-400 text-sm mb-3"><span id="multiResultCount">0</span> matches – click one to view</p>
+                <div class="glass rounded-3xl border border-white/10 divide-y divide-white/10 max-h-80 overflow-y-auto">
+                    <div id="multiResultRows"></div>
+                </div>
+            </div>
+
+            <div id="singleResultContent">
             <button id="copyIpBtn" onclick="copyIpManual()" class="hidden w-full mb-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 py-4 rounded-3xl font-bold text-lg flex items-center justify-center gap-3 shadow-xl transition-all">
                 <i class="fas fa-copy"></i> COPY IP ADDRESS
             </button>
             <button id="fortivoiceBtn" onclick="copyFortivoiceUrl()" class="hidden w-full mb-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 py-4 rounded-3xl font-bold text-lg flex items-center justify-center gap-3 shadow-xl transition-all">
-                <i class="fas fa-link"></i> Fortivoice IP Format[](https://IP/admin)
+                <i class="fas fa-link"></i> <span id="fortivoiceBtnLabel">Copy device URL</span>
             </button>
 
             <button id="matrixBtn" onclick="toggleMatrixView()" class="hidden w-full mb-6 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 py-4 rounded-3xl font-bold text-lg flex items-center justify-center gap-3 shadow-xl transition-all">
                 <i class="fas fa-table"></i> <span id="matrixBtnText">View Port Matrix</span>
             </button>
 
-            <div id="debugInfo" class="text-xs font-mono text-zinc-400 mb-4 p-3 bg-zinc-900 rounded-2xl border border-zinc-700"></div>
+            <div class="mb-4">
+                <button type="button" id="debugToggle" onclick="toggleDebugPanel()" class="text-xs text-zinc-500 hover:text-zinc-400 font-medium flex items-center gap-2">
+                    <i class="fas fa-chevron-right" id="debugChevron"></i> Debug
+                </button>
+                <div id="debugPanel" class="hidden mt-2 text-xs font-mono text-zinc-400 p-3 bg-zinc-900 rounded-2xl border border-zinc-700"></div>
+            </div>
 
             <!-- Site Table -->
             <div class="glass overflow-auto rounded-3xl border border-white/10 mb-8">
@@ -93,13 +158,45 @@
                     <tbody id="resultsBody" class="divide-y divide-white/10"></tbody>
                 </table>
             </div>
+            </div>
 
-            <!-- Matrix -->
+            <!-- Matrix (outside singleResultContent so Dell Universal can show it) -->
             <div id="matrixSection" class="hidden">
-                <h3 id="matrixTitle" class="text-xl font-semibold mb-4 flex items-center gap-3 text-amber-400">
-                    <i class="fas fa-table"></i> Port Matrix
-                </h3>
-                <div class="glass overflow-auto rounded-3xl border border-white/10" style="max-height: 600px;">
+                <div class="matrix-fullscreen-bar">
+                    <span class="matrix-fs-title" id="matrixFullscreenTitle">Port Matrix</span>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="exitMatrixFullscreen()" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold shadow-lg">
+                            <i class="fas fa-compress-alt"></i> Exit full screen
+                        </button>
+                        <button type="button" onclick="exitMatrixFullscreen(); newSearch();" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-lg">
+                            <i class="fas fa-search"></i> New search
+                        </button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-3 px-0 pt-3">
+                    <h3 id="matrixTitle" class="text-xl font-semibold flex items-center gap-3 text-amber-400">
+                        <i class="fas fa-table"></i> Port Matrix
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="matrixFullscreenBtn" onclick="toggleMatrixFullscreen()" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm font-medium">
+                            <i class="fas fa-expand"></i> Full screen
+                        </button>
+                        <button type="button" id="matrixExitFullscreenBtn" onclick="exitMatrixFullscreen()" class="hidden px-4 py-2 rounded-xl bg-zinc-700 hover:bg-zinc-600 text-sm font-medium">
+                            <i class="fas fa-compress"></i> Exit full screen
+                        </button>
+                        <button type="button" id="matrixNewSearchBtn" onclick="exitMatrixFullscreen(); newSearch();" class="hidden px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm font-medium">
+                            <i class="fas fa-search"></i> New search
+                        </button>
+                    </div>
+                </div>
+                <div id="matrixToolbar" class="flex flex-wrap items-center gap-4 mb-3">
+                    <label id="matrixResolveLabel" class="flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="checkbox" id="matrixResolveCheckbox" onchange="renderMatrixFromStored()" class="rounded border-zinc-600 bg-zinc-800 text-amber-500">
+                        <span>Resolve IPs for this site</span>
+                    </label>
+                    <input type="text" id="matrixFilterInput" oninput="renderMatrixFromStored()" placeholder="Filter by Device, VLAN, Patch Panel…" class="flex-1 min-w-[200px] bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm placeholder-zinc-500">
+                </div>
+                <div class="matrix-table-wrap glass overflow-auto rounded-3xl border border-white/10" style="max-height: 600px;">
                     <table class="w-full min-w-full">
                         <thead class="sticky top-0 bg-zinc-900 border-b border-white/10">
                             <tr id="matrixHeader"></tr>
@@ -112,8 +209,8 @@
 
         <!-- Empty State -->
         <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-center text-zinc-500">
-            <i class="fas fa-search text-7xl mb-6 opacity-40"></i>
-            <p class="text-2xl font-light">Type a Site# above</p>
+            <i class="fas fa-search text-7xl mb-6 opacity-40" id="emptyStateIcon"></i>
+            <p class="text-2xl font-light" id="emptyStateMessage">Search by Site#, address, city, brand, or IP</p>
         </div>
     </div>
 
@@ -143,45 +240,121 @@
         </div>
     </div>
 
+    <div id="adminPasswordModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="glass rounded-3xl p-8 w-full max-w-sm">
+            <h2 class="text-xl font-bold mb-4">Admin</h2>
+            <p class="text-sm text-zinc-400 mb-4">Enter password to update sites or matrices.</p>
+            <input type="password" id="adminPasswordInput" placeholder="Password" class="w-full bg-zinc-900 border border-white/10 rounded-2xl px-4 py-3 mb-4" onkeypress="if(event.key==='Enter') submitAdminPassword()">
+            <div id="adminPasswordError" class="hidden text-sm text-red-400 mb-3"></div>
+            <div class="flex gap-3">
+                <button onclick="submitAdminPassword()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-2xl font-semibold">Submit</button>
+                <button onclick="closeAdminPasswordModal()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 py-3 rounded-2xl font-semibold">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="glass rounded-3xl p-8 w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6">Settings</h2>
+            <label class="block mb-2 text-sm text-zinc-400">Theme</label>
+            <div class="flex gap-4 mb-6">
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="theme" value="dark" class="rounded-full border-zinc-600 bg-zinc-800 text-blue-500"> <span>Dark</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="theme" value="light" class="rounded-full border-zinc-600 bg-zinc-800 text-blue-500"> <span>Light</span></label>
+            </div>
+            <label class="flex items-center gap-3 mb-6 cursor-pointer">
+                <input type="checkbox" id="settingAutoCopyIp" class="w-5 h-5 rounded bg-zinc-800 border-zinc-600">
+                <span>Copy IP to clipboard when a site is opened</span>
+            </label>
+            <label class="block mb-2 text-sm text-zinc-400">Device URL template (use <code class="bg-zinc-800 px-1 rounded">{ip}</code> for the IP)</label>
+            <input type="text" id="settingFortivoiceTemplate" class="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 mb-6 font-mono text-sm" placeholder="https://{ip}/admin">
+            <div class="flex gap-3">
+                <button onclick="saveSettings(); toggleSettingsModal();" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-2xl font-semibold">Save</button>
+                <button onclick="toggleSettingsModal()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 py-3 rounded-2xl font-semibold">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <div class="text-center text-xs text-zinc-600 pb-6">ICS Internal Tool • LAN Only</div>
 
     <script>
-        let siteMap = new Map();
         let portMatrices = {};
         let currentIpAddress = '';
-        let allSites = [];
         let currentBrandRaw = '';
+        let defaultFortivoiceUrlTemplate = 'https://{ip}/admin';
+        let siteCount = 0;
 
         function normalizeBrand(b) {
             return (b || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
         }
 
-        async function loadAllData() {
-            try {
-                const res = await fetch('/api/data');
-                const data = await res.json();
-                allSites = data.sites || [];
-                portMatrices = data.matrices || {};
-                buildSiteMap(allSites);
-                document.getElementById('dataStatusHeader').classList.remove('hidden');
-                document.getElementById('sitesLoaded').textContent = allSites.length;
-            } catch(e) {}
+        function getAutoCopyIp() {
+            return localStorage.getItem('autoCopyIp') === 'true';
+        }
+        function getFortivoiceUrlTemplate() {
+            return localStorage.getItem('fortivoiceUrlTemplate') || defaultFortivoiceUrlTemplate;
+        }
+        function applyTheme(theme) {
+            const html = document.documentElement;
+            if (theme === 'light') html.classList.add('theme-light');
+            else html.classList.remove('theme-light');
+        }
+        function saveSettings() {
+            localStorage.setItem('autoCopyIp', document.getElementById('settingAutoCopyIp').checked);
+            const t = document.getElementById('settingFortivoiceTemplate').value.trim();
+            if (t) localStorage.setItem('fortivoiceUrlTemplate', t);
+            const theme = document.querySelector('input[name="theme"]:checked')?.value || 'dark';
+            localStorage.setItem('theme', theme);
+            applyTheme(theme);
+            updateFortivoiceButtonLabel();
+        }
+        function toggleSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById('settingAutoCopyIp').checked = getAutoCopyIp();
+                document.getElementById('settingFortivoiceTemplate').value = getFortivoiceUrlTemplate();
+                const theme = localStorage.getItem('theme') || 'dark';
+                const radio = document.querySelector('input[name="theme"][value="' + theme + '"]');
+                if (radio) radio.checked = true;
+            }
+        }
+        function toggleDebugPanel() {
+            const panel = document.getElementById('debugPanel');
+            const chevron = document.getElementById('debugChevron');
+            panel.classList.toggle('hidden');
+            chevron.className = panel.classList.contains('hidden') ? 'fas fa-chevron-right' : 'fas fa-chevron-down';
+        }
+        function updateFortivoiceButtonLabel() {
+            const t = getFortivoiceUrlTemplate();
+            const label = t.replace(/\{ip\}/gi, 'IP').replace(/^https?:\/\//, '').slice(0, 30);
+            document.getElementById('fortivoiceBtnLabel').textContent = 'Copy ' + (label || 'device URL');
         }
 
-        function buildSiteMap(data) {
-            siteMap.clear();
-            data.forEach(row => {
-                let siteRaw = row['Site#'] || row['Site'] || '';
-                const siteStr = String(siteRaw).trim();
-                if (siteStr) {
-                    siteMap.set(siteStr, row);
-                    const numOnly = siteStr.replace(/\D/g, '');
-                    if (numOnly) {
-                        siteMap.set(numOnly, row);
-                        siteMap.set(numOnly.padStart(4, '0'), row);
-                    }
+        async function loadStatsAndMatrices() {
+            try {
+                const [statsRes, matricesRes] = await Promise.all([
+                    fetch('/api/stats'),
+                    fetch('/api/matrices')
+                ]);
+                const stats = await statsRes.json();
+                const matricesData = await matricesRes.json();
+                portMatrices = matricesData.matrices || {};
+                defaultFortivoiceUrlTemplate = stats.fortivoiceUrlTemplate || defaultFortivoiceUrlTemplate;
+                document.getElementById('dataStatusHeader').classList.remove('hidden');
+                document.getElementById('dataStatusHeader').classList.add('flex');
+                siteCount = stats.siteCount ?? 0;
+                document.getElementById('sitesLoaded').textContent = siteCount;
+                const emptyIcon = document.getElementById('emptyStateIcon');
+                const emptyMsg = document.getElementById('emptyStateMessage');
+                if (siteCount === 0) {
+                    emptyIcon.className = 'fas fa-database text-7xl mb-6 opacity-40';
+                    emptyMsg.textContent = "No sites loaded. Use 'Update Sites' to paste your spreadsheet.";
+                } else {
+                    emptyIcon.className = 'fas fa-search text-7xl mb-6 opacity-40';
+                    emptyMsg.textContent = 'Search by Site#, address, city, brand, or IP';
                 }
-            });
+                updateFortivoiceButtonLabel();
+            } catch(e) {}
         }
 
         function detectIpAddress(row) {
@@ -216,19 +389,73 @@
             return null;
         }
 
-        function searchSite() {
-            let input = document.getElementById('siteInput').value.trim();
+        async function searchSite() {
+            const input = document.getElementById('siteInput').value.trim();
             if (!input) return;
-            if (siteMap.size === 0) return alert("Data not loaded yet");
-            let row = siteMap.get(input) || siteMap.get(input.padStart(4,'0'));
-            if (!row) {
+            if (siteCount === 0) {
                 document.getElementById('resultsPanel').classList.remove('hidden');
                 document.getElementById('emptyState').classList.add('hidden');
-                document.getElementById('resultSite').innerHTML = `<span class="text-red-400">Not found</span>`;
-                document.getElementById('resultsBody').innerHTML = `<tr><td colspan="2" class="py-16 text-center text-zinc-500">Site# ${input} not found</td></tr>`;
+                document.getElementById('multiResultList').classList.add('hidden');
+                document.getElementById('singleResultContent').classList.remove('hidden');
+                document.getElementById('resultSite').innerHTML = '<span class="text-amber-400">No sites loaded</span>';
+                document.getElementById('resultsBody').innerHTML = '<tr><td colspan="2" class="py-16 text-center text-zinc-500">Use <strong>Update Sites</strong> above to paste your spreadsheet first.</td></tr>';
                 return;
             }
-            displayResults(row, input);
+            document.getElementById('resultsPanel').classList.remove('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('multiResultList').classList.add('hidden');
+            document.getElementById('singleResultContent').classList.remove('hidden');
+            document.getElementById('resultSite').innerHTML = '<span class="text-zinc-400">Searching...</span>';
+            document.getElementById('resultsBody').innerHTML = '';
+            try {
+                const mode = document.querySelector('input[name="searchMode"]:checked')?.value || 'site';
+                const res = await fetch('/api/search?q=' + encodeURIComponent(input) + '&mode=' + encodeURIComponent(mode));
+                if (!res.ok) {
+                    document.getElementById('resultSite').innerHTML = `<span class="text-red-400">Search unavailable</span>`;
+                    document.getElementById('resultsBody').innerHTML = `<tr><td colspan="2" class="py-16 text-center text-zinc-500">Server returned ${res.status}. Restart the server and try again.</td></tr>`;
+                    return;
+                }
+                let results;
+                try {
+                    results = await res.json();
+                } catch (parseErr) {
+                    document.getElementById('resultSite').innerHTML = `<span class="text-red-400">Error</span>`;
+                    document.getElementById('resultsBody').innerHTML = `<tr><td colspan="2" class="py-16 text-center text-zinc-500">Invalid response. Restart the server and try again.</td></tr>`;
+                    return;
+                }
+                if (!Array.isArray(results) || results.length === 0) {
+                    document.getElementById('resultSite').innerHTML = `<span class="text-red-400">Not found</span>`;
+                    document.getElementById('resultsBody').innerHTML = `<tr><td colspan="2" class="py-16 text-center text-zinc-500">No matches for "${input}"</td></tr>`;
+                    return;
+                }
+                if (results.length === 1) {
+                    const row = results[0];
+                    const siteNum = String(row['Site#'] || row['Site'] || input).trim();
+                    displayResults(row, siteNum);
+                    return;
+                }
+                document.getElementById('resultSite').innerHTML = `Search: <span class="font-mono text-blue-400">${input}</span>`;
+                document.getElementById('multiResultCount').textContent = results.length;
+                const container = document.getElementById('multiResultRows');
+                container.innerHTML = '';
+                results.forEach(row => {
+                    const siteNum = String(row['Site#'] || row['Site'] || '').trim();
+                    const addr = [row['Service Address'], row['City'], row['State']].filter(Boolean).join(', ');
+                    const brand = row['Brand'] || row['brand'] || '';
+                    const ip = row['IP: Address'] || row['IP Address'] || row['IP'] || '';
+                    const div = document.createElement('button');
+                    div.type = 'button';
+                    div.className = 'w-full text-left py-4 px-6 hover:bg-white/5 transition-colors flex flex-wrap items-center gap-x-4 gap-y-1';
+                    div.innerHTML = `<span class="font-mono text-blue-400 font-semibold">${siteNum || '—'}</span><span class="text-zinc-300">${addr || '—'}</span>${brand ? `<span class="text-zinc-500 text-sm">${brand}</span>` : ''}${ip ? `<span class="text-emerald-400/90 font-mono text-sm">${ip}</span>` : ''}`;
+                    div.onclick = () => { document.getElementById('multiResultList').classList.add('hidden'); document.getElementById('singleResultContent').classList.remove('hidden'); displayResults(row, siteNum); };
+                    container.appendChild(div);
+                });
+                document.getElementById('singleResultContent').classList.add('hidden');
+                document.getElementById('multiResultList').classList.remove('hidden');
+            } catch (e) {
+                document.getElementById('resultSite').innerHTML = `<span class="text-red-400">Error</span>`;
+                document.getElementById('resultsBody').innerHTML = `<tr><td colspan="2" class="py-16 text-center text-zinc-500">Search failed. Try again.</td></tr>`;
+            }
         }
 
         function displayResults(row, searched) {
@@ -237,11 +464,12 @@
 
             document.getElementById('emptyState').classList.add('hidden');
             document.getElementById('resultsPanel').classList.remove('hidden');
+            document.getElementById('multiResultList').classList.add('hidden');
+            document.getElementById('singleResultContent').classList.remove('hidden');
             document.getElementById('resultSite').innerHTML = `Site# <span class="font-mono text-blue-400">${searched}</span>`;
 
-            let debugHTML = `Detected brand: <span class="font-bold">${currentBrandRaw || '(none)'}</span><br>`;
-            debugHTML += `Loaded matrices: ${Object.keys(portMatrices).join(', ') || '(none)'}`;
-            document.getElementById('debugInfo').innerHTML = debugHTML;
+            const debugHTML = `Detected brand: <span class="font-bold">${currentBrandRaw || '(none)'}</span><br>Loaded matrices: ${Object.keys(portMatrices).join(', ') || '(none)'}`;
+            document.getElementById('debugPanel').innerHTML = debugHTML;
 
             document.getElementById('copyIpBtn').classList.toggle('hidden', !currentIpAddress);
             document.getElementById('fortivoiceBtn').classList.toggle('hidden', !currentIpAddress);
@@ -290,12 +518,86 @@
                 tbody.appendChild(tr);
             });
 
-            if (currentIpAddress) copyToClipboard(currentIpAddress);
+            if (currentIpAddress && getAutoCopyIp()) copyToClipboard(currentIpAddress);
 
             setTimeout(() => {
                 const input = document.getElementById('siteInput');
                 input.focus(); input.select();
             }, 30);
+        }
+
+        let currentMatrixRows = [];
+        let currentMatrixDisplayName = '';
+        let isUniversalMatrixView = false;
+
+        function getUniversalMatrix() {
+            const tryKeys = ['Dell Universal', 'Dell', 'dell universal', 'dell'];
+            for (const k of tryKeys) {
+                if (portMatrices[k] && Array.isArray(portMatrices[k]) && portMatrices[k].length > 0)
+                    return { display: k, rows: portMatrices[k] };
+            }
+            for (const key in portMatrices) {
+                const n = normalizeBrand(key);
+                if ((n === 'dell universal' || n === 'dell') && Array.isArray(portMatrices[key]) && portMatrices[key].length > 0)
+                    return { display: key, rows: portMatrices[key] };
+            }
+            return null;
+        }
+
+        function showUniversalMatrix() {
+            const universal = getUniversalMatrix();
+            if (!universal || !universal.rows || !universal.rows.length) {
+                openUniversalUploadModal();
+                return;
+            }
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('resultsPanel').classList.remove('hidden');
+            document.getElementById('multiResultList').classList.add('hidden');
+            document.getElementById('singleResultContent').classList.add('hidden');
+            document.getElementById('resultSite').innerHTML = universal.display;
+            currentMatrixRows = universal.rows;
+            currentMatrixDisplayName = universal.display;
+            isUniversalMatrixView = true;
+            document.getElementById('matrixFilterInput').value = '';
+            document.getElementById('matrixResolveCheckbox').checked = false;
+            document.getElementById('matrixResolveLabel').style.display = 'none';
+            renderMatrixFromStored();
+            document.getElementById('matrixSection').classList.remove('hidden');
+            document.getElementById('matrixSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function openUniversalUploadModal() {
+            document.getElementById('brandName').value = 'Dell Universal';
+            document.getElementById('matrixInput').value = '';
+            document.getElementById('matrixStatus').innerHTML = '';
+            document.getElementById('matrixModal').classList.remove('hidden');
+        }
+
+        function toggleMatrixFullscreen() {
+            document.getElementById('matrixFullscreenTitle').textContent = 'Port Matrix – ' + currentMatrixDisplayName;
+            document.getElementById('matrixSection').classList.add('matrix-fullscreen');
+            document.getElementById('matrixFullscreenBtn').classList.add('hidden');
+            document.getElementById('matrixExitFullscreenBtn').classList.remove('hidden');
+            document.getElementById('matrixNewSearchBtn').classList.remove('hidden');
+        }
+
+        function exitMatrixFullscreen() {
+            document.getElementById('matrixSection').classList.remove('matrix-fullscreen');
+            document.getElementById('matrixFullscreenBtn').classList.remove('hidden');
+            document.getElementById('matrixExitFullscreenBtn').classList.add('hidden');
+            document.getElementById('matrixNewSearchBtn').classList.add('hidden');
+        }
+
+        function resolveMatrixPlaceholders(siteIp, str) {
+            if (!str || typeof str !== 'string') return str;
+            const parts = siteIp.trim().split('.');
+            if (parts.length !== 4) return str;
+            const octet2 = parts[1];
+            const octet3 = parts[2];
+            return str
+                .replace(/2xx/gi, octet2)
+                .replace(/xxx/gi, octet3)
+                .replace(/xx/gi, octet3);
         }
 
         function toggleMatrixView() {
@@ -308,7 +610,13 @@
             }
 
             if (section.classList.contains('hidden')) {
-                renderMatrix(match.display, match.rows);
+                currentMatrixRows = match.rows;
+                currentMatrixDisplayName = match.display;
+                isUniversalMatrixView = false;
+                document.getElementById('matrixFilterInput').value = '';
+                document.getElementById('matrixResolveCheckbox').checked = false;
+                document.getElementById('matrixResolveLabel').style.display = '';
+                renderMatrixFromStored();
                 section.classList.remove('hidden');
                 document.getElementById('matrixBtnText').textContent = `Hide Port Matrix – ${match.display}`;
                 section.scrollIntoView({ behavior: 'smooth' });
@@ -318,13 +626,25 @@
             }
         }
 
-        function renderMatrix(displayName, rows) {
+        function renderMatrixFromStored() {
+            if (!currentMatrixRows.length) return;
+            const filterText = (document.getElementById('matrixFilterInput').value || '').trim().toLowerCase();
+            const resolveIps = document.getElementById('matrixResolveCheckbox').checked && currentIpAddress;
+            const filtered = filterText
+                ? currentMatrixRows.filter(row => Object.values(row).some(v => String(v || '').toLowerCase().includes(filterText)))
+                : currentMatrixRows;
+            renderMatrix(currentMatrixDisplayName, filtered, { resolveIps, siteIp: currentIpAddress });
+        }
+
+        function renderMatrix(displayName, rows, opts = {}) {
+            const { resolveIps = false, siteIp = '' } = opts;
             document.getElementById('matrixTitle').innerHTML = `<i class="fas fa-table"></i> Port Matrix – ${displayName}`;
 
             const headerRow = document.getElementById('matrixHeader');
             headerRow.innerHTML = '';
             const firstRow = rows[0] || {};
-            Object.keys(firstRow).forEach(key => {
+            const keys = Object.keys(firstRow);
+            keys.forEach(key => {
                 const th = document.createElement('th');
                 th.className = 'py-4 px-6 font-medium text-amber-300 text-xs tracking-widest text-left';
                 th.textContent = key;
@@ -335,10 +655,12 @@
             tbody.innerHTML = '';
             rows.forEach(row => {
                 const tr = document.createElement('tr');
-                Object.values(row).forEach(val => {
+                keys.forEach(key => {
+                    let val = row[key];
+                    if (resolveIps && siteIp && val != null) val = resolveMatrixPlaceholders(siteIp, String(val));
                     const td = document.createElement('td');
                     td.className = 'py-4 px-6 font-mono';
-                    td.textContent = val || '';
+                    td.textContent = val != null ? val : '';
                     td.onclick = () => copyValue(td);
                     tr.appendChild(td);
                 });
@@ -363,7 +685,11 @@
         }
 
         function copyIpManual() { if (currentIpAddress) copyToClipboard(currentIpAddress); }
-        function copyFortivoiceUrl() { if (currentIpAddress) copyToClipboard(`https://${currentIpAddress}/admin`); }
+        function copyFortivoiceUrl() {
+            if (!currentIpAddress) return;
+            const url = getFortivoiceUrlTemplate().replace(/\{ip\}/gi, currentIpAddress);
+            copyToClipboard(url);
+        }
         function copyValue(el) {
             let text = el.textContent.trim();
             if (text) copyToClipboard(text);
@@ -380,12 +706,63 @@
         function newSearch() {
             document.getElementById('resultsPanel').classList.add('hidden');
             document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('multiResultList').classList.add('hidden');
             document.getElementById('siteInput').value = '';
             document.getElementById('siteInput').focus();
         }
 
         function toggleSiteModal() { document.getElementById('siteModal').classList.toggle('hidden'); }
-        function toggleMatrixModal() { document.getElementById('matrixModal').classList.toggle('hidden'); }
+        function toggleMatrixModal() {
+            document.getElementById('matrixModal').classList.toggle('hidden');
+            if (document.getElementById('matrixModal').classList.contains('hidden')) {
+                document.getElementById('brandName').value = '';
+            }
+        }
+
+        function isAdminUnlocked() { return sessionStorage.getItem('adminUnlocked') === 'true'; }
+        function setAdminUnlocked(ok) { sessionStorage.setItem('adminUnlocked', ok ? 'true' : 'false'); }
+        function closeAdminMenu() { document.getElementById('adminDropdown').classList.add('hidden'); }
+        function closeAdminPasswordModal() {
+            document.getElementById('adminPasswordModal').classList.add('hidden');
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('adminPasswordError').classList.add('hidden');
+        }
+        function toggleAdminMenu() {
+            if (isAdminUnlocked()) {
+                document.getElementById('adminDropdown').classList.toggle('hidden');
+                return;
+            }
+            document.getElementById('adminPasswordError').classList.add('hidden');
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('adminPasswordModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
+        }
+        async function submitAdminPassword() {
+            const input = document.getElementById('adminPasswordInput');
+            const errEl = document.getElementById('adminPasswordError');
+            const password = input.value;
+            try {
+                const res = await fetch('/api/admin/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
+                const data = await res.json();
+                if (data.ok) {
+                    setAdminUnlocked(true);
+                    closeAdminPasswordModal();
+                    document.getElementById('adminDropdown').classList.remove('hidden');
+                    document.querySelector('[onclick="toggleAdminMenu()"]').innerHTML = '<i class="fas fa-unlock"></i> Admin';
+                } else {
+                    errEl.textContent = 'Incorrect password.';
+                    errEl.classList.remove('hidden');
+                }
+            } catch (e) {
+                errEl.textContent = 'Could not verify. Try again.';
+                errEl.classList.remove('hidden');
+            }
+        }
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('adminDropdown').classList.contains('hidden') &&
+                !e.target.closest('[onclick="toggleAdminMenu()"]') && !e.target.closest('#adminDropdown'))
+                closeAdminMenu();
+        });
 
         async function uploadSites() {
             const text = document.getElementById('siteInputModal').value;
@@ -418,9 +795,23 @@
             } catch(e) { status.innerHTML = '<span class="text-red-400">Upload failed</span>'; }
         }
 
+        function updateSearchPlaceholder() {
+            const mode = document.querySelector('input[name="searchMode"]:checked')?.value || 'site';
+            const placeholders = { site: 'e.g. 4412', address: 'e.g. International Drive', city: 'e.g. Orlando', brand: 'e.g. Bahama Breeze', ip: 'e.g. 10.220.2.237' };
+            document.getElementById('siteInput').placeholder = placeholders[mode] || placeholders.site;
+        }
+
+        function updateAdminButtonIcon() {
+            const btn = document.querySelector('[onclick="toggleAdminMenu()"]');
+            if (btn) btn.innerHTML = isAdminUnlocked() ? '<i class="fas fa-unlock"></i> Admin' : '<i class="fas fa-lock"></i> Admin';
+        }
         window.onload = () => {
-            loadAllData();
+            applyTheme(localStorage.getItem('theme') || 'dark');
+            updateAdminButtonIcon();
+            loadStatsAndMatrices();
             document.getElementById('siteInput').focus();
+            updateSearchPlaceholder();
+            document.querySelectorAll('input[name="searchMode"]').forEach(el => el.addEventListener('change', updateSearchPlaceholder));
         };
     </script>
 </body>

@@ -26,6 +26,8 @@ npm start
 
 Then open **http://localhost:3005** in your browser.
 
+Optional: set **`ADMIN_PASSWORD`** in the environment to require a password when opening the Admin menu (Update Sites / Update Port Matrices / Upload Dell Universal). If unset, no password is required.
+
 ## Project Structure
 
 | Path | Purpose |
